@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeMaster - Trading Game</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Page Containers */
+        .page { display: none; min-height: 100vh; }
+        .page.active { display: block; }
+
+        /* Navigation */
+        .navbar {
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00d4ff, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Auth Pages */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .auth-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .auth-card h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #fff, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-card p {
+            opacity: 0.8;
+            margin-bottom: 2.5rem;
+            font-size: 1.1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #00d4ff;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1.2rem;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 15px;
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0,212,255,0.3);
+            background: rgba(255,255,255,0.1);
+        }
+
+        .form-input::placeholder { color: rgba(255,255,255,0.5); }
+
+        .auth-btn {
+            width: 100%;
+            padding: 1.3rem;
+            background: linear-gradient(45deg, #00d4ff, #ff6b6b);
+            border: none;
+            border-radius: 15px;
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 1rem;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(0,212,255,0.4);
+        }
+
+        .auth-toggle {
+            opacity: 0.8;
+            margin-top: 1.5rem;
+        }
+
+        .auth-toggle a {
+            color: #00d4ff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .auth-toggle a:hover { text-decoration: underline; }
+
+        /* Landing Page */
+        .landing-page { display: block; }
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 2rem;
+        }
+
+        .hero-content h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(45deg, #fff, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .cta-btn {
+            background: linear-gradient(45deg, #00d4ff, #ff6b6b);
+            border: none;
+            padding: 1.2rem 3rem;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(0,212,255,0.3);
+            margin: 0 0.5rem;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0,212,255,0.4);
+        }
+
+        /* Dashboard Styles */
+        .dashboard-body { background: #0a0a15; }
+        .dashboard { min-height: 100vh; padding-top: 70px; }
+
+        .dashboard-header {
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(20px);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 0.8rem 1.5rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover { background: rgba(255,255,255,0.2); }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .card h3 {
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #00d4ff;
+        }
+
+        .balance-amount { font-size: 2rem; font-weight: bold; color: #00ff88; }
+        .positive { color: #00ff88 !important; }
+        .negative { color: #ff4444 !important; }
+
+        #stockList { max-height: 400px; overflow-y: auto; }
+        .stock-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .stock-item:hover {
+            background: rgba(0,212,255,0.1);
+            transform: translateX(5px);
+        }
+
+        .trade-panel { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
+        .trade-input {
+            padding: 0.8rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+        }
+
+        .trade-buttons { display: flex; gap: 1rem; }
+        .btn-buy {
+            flex: 1; padding: 1rem;
+            background: linear-gradient(45deg, #00ff88, #00cc66);
+            border: none; border-radius: 10px;
+            color: #000; font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-sell {
+            flex: 1; padding: 1rem;
+            background: linear-gradient(45deg, #ff4444, #cc3333);
+            border: none; border-radius: 10px;
+            color: #fff; font-weight: bold;
+            cursor: pointer;
+        }
+
+        #portfolioChart, #priceChart { height: 300px; width: 100%; }
+        .notification {
+            position: fixed;
+            top: 100px; right: 2rem;
+            padding: 1rem 2rem;
+            background: linear-gradient(45deg, #00ff88, #00cc66);
+            border-radius: 10px;
+            color: #000;
+            font-weight: bold;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            z-index: 2000;
+        }
+
+        .notification.show { transform: translateX(0); }
+
+        .search-box {
+            width: 100%; padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero-content h1 { font-size: 2.5rem; }
+            .hero-stats { flex-direction: column; gap: 2rem; }
+            .auth-card { margin: 1rem; padding: 2rem; }
+            .dashboard-grid { grid-template-columns: 1fr; padding: 0 1rem; }
+            .nav-container { padding: 0 1rem; flex-direction: column; gap: 1rem; }
+            .dashboard-header { flex-direction: column; gap: 1rem; text-align: center; }
+            .trade-buttons { flex-direction: column; }
+        }
+
+        @media (max-width: 480px) {
+            .hero-content h1 { font-size: 2rem; }
+            .auth-card h2 { font-size: 2rem; }
+            .card { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth Pages -->
+    <div id="signupPage" class="page active">
+        <div class="auth-container">
+            <div class="auth-card">
+                <i class="fas fa-user-plus" style="font-size: 4rem; color: #00d4ff; margin-bottom: 1rem;"></i>
+                <h2>Create Account</h2>
+                <p>Join thousands of traders learning with real market data</p>
+                <form onsubmit="handleSignup(event)">
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Username</label>
+                        <input type="text" class="form-input" id="signupUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-envelope"></i> Email</label>
+                        <input type="email" class="form-input" id="signupEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-lock"></i> Password</label>
+                        <input type="password" class="form-input" id="signupPassword" required minlength="6">
+                    </div>
+                    <button type="submit" class="auth-btn">
+                        <i class="fas fa-rocket"></i> Sign Up & Start Trading
+                    </button>
+                </form>
+                <div class="auth-toggle">
+                    Already have an account? <a href="#" onclick="showLogin()">Log In</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loginPage" class="page">
+        <div class="auth-container">
+            <div class="auth-card">
+                <i class="fas fa-sign-in-alt" style="font-size: 4rem; color: #ff6b6b; margin-bottom: 1rem;"></i>
+                <h2>Welcome Back</h2>
+                <p>Log in to access your trading dashboard</p>
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Username</label>
+                        <input type="text" class="form-input" id="loginUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-lock"></i> Password</label>
+                        <input type="password" class="form-input" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="auth-btn">
+                        <i class="fas fa-chart-line"></i> Enter Dashboard
+                    </button>
+                </form>
+                <div class="auth-toggle">
+                    New trader? <a href="#" onclick="showSignup()">Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Landing Page -->
+    <div id="landingPage" class="page">
+        <nav class="navbar">
+            <div class="nav-container">
+                <h1 class="logo"><i class="fas fa-chart-line"></i> TradeMaster</h1>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="cta-btn" onclick="showLogin()" style="padding: 0.8rem 1.5rem; font-size: 1rem;">Log In</button>
+                    <button class="cta-btn" onclick="showSignup()" style="padding: 0.8rem 1.5rem; font-size: 1rem;">Sign Up</button>
+                </div>
+            </div>
+        </nav>
+
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Master Trading<br>with Virtual Money</h1>
+                <p>Practice real-time trading with live market data. No risk, all reward!</p>
+                <div class="hero-stats" style="display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; margin: 3rem 0;">
+                    <div style="text-align: center;">
+                        <h3 style="font-size: 2.5rem; color: #00d4ff;">$100,000</h3>
+                        <p>Starting Capital</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <h3 style="font-size: 2.5rem; color: #ff6b6b;">Live Data</h3>
+                        <p>Finnhub API</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <h3 style="font-size: 2.5rem; color: #00ff88;">500+</h3>
+                        <p>Stocks Available</p>
+                    </div>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;">
+                    <button class="cta-btn" onclick="showLogin()">Log In</button>
+                    <button class="cta-btn" onclick="showSignup()">Sign Up Free</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div id="dashboardPage" class="page dashboard-page dashboard-body">
+        <div class="dashboard">
+            <header class="dashboard-header">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="back-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    <h1><i class="fas fa-chart-line"></i> TradeMaster Dashboard</h1>
+                </div>
+                <div class="balance">
+                    <div class="balance-amount" id="balance">$100,000.00</div>
+                    <div class="balance-change positive" id="balanceChange">+0.00%</div>
+                </div>
+            </header>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3><i class="fas fa-list"></i> Popular Stocks</h3>
+                    <input type="text" class="search-box" id="stockSearch" placeholder="Search stocks...">
+                    <div id="stockList"></div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-exchange-alt"></i> Trade</h3>
+                    <div style="margin-bottom: 1rem; text-align: center;">
+                        <strong id="selectedStock">Select a stock</strong>
+                        <div style="font-size: 1.8rem; color: #00ff88; margin: 0.5rem 0;">
+                            $<span id="currentPrice">0.00</span>
+                        </div>
+                    </div>
+                    <div class="trade-panel">
+                        <input type="number" class="trade-input" id="quantity" placeholder="Quantity" min="1">
+                        <div class="trade-buttons">
+                            <button class="btn-buy" onclick="placeOrder('buy')">
+                                <i class="fas fa-arrow-up"></i> Buy
+                            </button>
+                            <button class="btn-sell" onclick="placeOrder('sell')">
+                                <i class="fas fa-arrow-down"></i> Sell
+                            </button>
+                        </div>
+                        <div style="text-align: center; font-size: 0.9rem; opacity: 0.8;">
+                            Cash: $<span id="cashAvailable">100,000.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-briefcase"></i> Portfolio</h3>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                        <span>Total Value: $<span id="totalValue">100,000.00</span></span>
+                        <span>P&L: <span id="pnlToday" class="positive">$0.00</span></span>
+                    </div>
+                    <canvas id="portfolioChart"></canvas>
+                </div>
+
+                <div class="card" style="grid-column: span 2;">
+                    <h3><i class="fas fa-chart-candlestick"></i> Live Chart</h3>
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // User & Game State
+        let currentUser = null;
+        let gameState = {
+            balance: 100000, cash: 100000, portfolio: {},
+            currentSymbol: null, stocks: ['AAPL','GOOGL','MSFT','TSLA','AMZN','NVDA','META'],
+            stockPrices: {}, priceHistory: {},
+            portfolioChart: null, priceChart: null,
+            finnhubToken: 'YOUR_FINNHUB_API_KEY' // Get from finnhub.io
+        };
+
+        // Users storage (localStorage)
+        const users = JSON.parse(localStorage.getItem('trademaster_users')) || {};
+
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        function initApp() {
+            if (localStorage.getItem('currentUser')) {
+                currentUser = localStorage.getItem('currentUser');
+                showDashboard();
+                initDashboard();
+                updateStockPrices();
+            }
+        }
+
+        // Auth Functions
+        function showSignup() {
+            hideAllPages();
+            document.getElementById('signupPage').classList.add('active');
+        }
+
+        function showLogin() {
+            hideAllPages();
+            document.getElementById('loginPage').classList.add('active');
+        }
+
+        function showLanding() {
+            hideAllPages();
+            document.getElementById('landingPage').classList.add('active');
+        }
+
+        function showDashboard() {
+            hideAllPages();
+            document.getElementById('dashboardPage').classList.add('active');
+            document.getElementById('username').textContent = currentUser || 'Trader';
+        }
+
+        function hideAllPages() {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+        }
+
+        function handleSignup(event) {
+            event.preventDefault();
+            const username = document.getElementById('signupUsername').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+
+            if (users[username]) {
+                showNotification('Username already exists!');
+                return;
+            }
+
+            // Create user
+            users[username] = {
+                email, password, 
+                joined: new Date().toISOString(),
+                balance: 100000,
+                portfolio: {}
+            };
+            localStorage.setItem('trademaster_users', JSON.stringify(users));
+            
+            showNotification('Account created successfully!');
+            currentUser = username;
+            localStorage.setItem('currentUser', username);
+            setTimeout(showDashboard, 1500);
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (users[username] && users[username].password === password) {
+                currentUser = username;
+                localStorage.setItem('currentUser', username);
+                showNotification('Welcome back!');
+                setTimeout(showDashboard, 1000);
+            } else {
+                showNotification('Invalid credentials!');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            showLanding();
+        }
+
+        // Dashboard Functions (same as before)
+        function initDashboard() {
+            const portfolioCtx = document.getElementById('portfolioChart').getContext('2d');
+            gameState.portfolioChart = new Chart(portfolioCtx, {
+                type: 'doughnut',
+                data: { labels: ['Cash', 'Stocks'], datasets: [{ data: [100000, 0], backgroundColor: ['#00d4ff', '#ff6b6b'] }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const priceCtx = document.getElementById('priceChart').getContext('2d');
+            gameState.priceChart = new Chart(priceCtx, {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Price', data: [], borderColor: '#00ff88', tension: 0.4 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { x: { display: false }, y: { ticks: { color: '#fff' } } },
+                    plugins: { legend: { labels: { color: '#fff' } } }
+                }
+            });
+
+            document.getElementById('stockSearch').addEventListener('input', filterStocks);
+        }
+
+        async function updateStockPrices() {
+            gameState.stocks.forEach(symbol => {
+                try {
+                    // Real API or demo
+                    simulatePriceMovement(symbol);
+                } catch(e) {
+                    simulatePriceMovement(symbol);
+                }
+            });
+            updatePortfolioValues();
+        }
+
+        function simulatePriceMovement(symbol) {
+            if (!gameState.stockPrices[symbol]) gameState.stockPrices[symbol] = 100 + Math.random() * 400;
+            const volatility = 0.02;
+            const change = (Math.random() - 0.5) * volatility;
+            gameState.stockPrices[symbol] *= (1 + change);
+            
+            if (!gameState.priceHistory[symbol]) gameState.priceHistory[symbol] = [];
+            gameState.priceHistory[symbol].push({ time: new Date(), price: gameState.stockPrices[symbol] });
+            if (gameState.priceHistory[symbol].length > 50) gameState.priceHistory[symbol].shift();
+        }
+
+        function updateStockList() {
+            const stockList = document.getElementById('stockList');
+            stockList.innerHTML = '';
+            gameState.stocks.forEach(symbol => {
+                if (gameState.stockPrices[symbol]) {
+                    const change = ((gameState.stockPrices[symbol] - 100) / 100 * 100).toFixed(2);
+                    const div = document.createElement('div');
+                    div.className = 'stock-item';
+                    div.onclick = () => selectStock(symbol);
+                    div.innerHTML = `
+                        <div><div class="stock-symbol">${symbol}</div><div class="stock-change ${change>=0?'positive':'negative'}">${change>=0?'+' : ''}${change}%</div></div>
+                        <div class="stock-price">$${gameState.stockPrices[symbol].toFixed(2)}</div>
+                    `;
+                    stockList.appendChild(div);
+                }
+            });
+        }
+
+        function selectStock(symbol) {
+            gameState.currentSymbol = symbol;
+            document.getElementById('selectedStock').textContent = symbol;
+            document.getElementById('currentPrice').textContent = gameState.stockPrices[symbol]?.toFixed(2) || '0.00';
+            if (gameState.priceChart && gameState.priceHistory[symbol]) {
+                const data = gameState.priceHistory[symbol];
+                gameState.priceChart.data.labels = data.map(d => d.time);
+                gameState.priceChart.data.datasets[0].data = data.map(d => d.price);
+                gameState.priceChart.update('none');
+            }
+        }
+
+        function placeOrder(type) {
+            const symbol = gameState.currentSymbol;
+            if (!symbol || !gameState.stockPrices[symbol]) return showNotification('Select a stock!');
+            const quantity = parseInt(document.getElementById('quantity').value) || 0;
+            if (quantity <= 0) return showNotification('Enter valid quantity!');
+            
+            const price = gameState.stockPrices[symbol];
+            const total = quantity * price;
+            
+            if (type === 'buy' && total > gameState.cash) return showNotification('Insufficient cash!');
+            if (type === 'sell' && (!gameState.portfolio[symbol] || gameState.portfolio[symbol] < quantity)) 
+                return showNotification('Insufficient shares!');
+            
+            if (!gameState.portfolio[symbol]) gameState.portfolio[symbol] = 0;
+            if (type === 'buy') {
+                gameState.portfolio[symbol] += quantity;
+                gameState.cash -= total;
+            } else {
+                gameState.portfolio[symbol] -= quantity;
+                gameState.cash += total;
+            }
+            
+            gameState.balance = gameState.cash + Object.values(gameState.portfolio).reduce((sum, qty) => sum + (qty * (gameState.stockPrices[Object.keys(gameState.portfolio)[0]] || 100)), 0);
+            document.getElementById('quantity').value = '';
+            updateDashboard();
+            showNotification(`${type.toUpperCase()} ${quantity} ${symbol} @ $${price.toFixed(2)}`);
+        }
+
+        function updatePortfolioValues() {
+            let totalValue = gameState.cash;
+            for (let symbol in gameState.portfolio) {
+                if (gameState.portfolio[symbol] > 0 && gameState.stockPrices[symbol]) {
+                    totalValue += gameState.portfolio[symbol] * gameState.stockPrices[symbol];
+                }
+            }
+            gameState.balance = totalValue;
+        }
+
+        function updateDashboard() {
+            document.getElementById('balance').textContent = `$${gameState.balance.toFixed(2)}`;
+            document.getElementById('cashAvailable').textContent = gameState.cash.toFixed(2);
+            const changePercent = ((gameState.balance - 100000) / 100000 * 100).toFixed(2);
+            document.getElementById('balanceChange').textContent = changePercent + '%';
+            document.getElementById('balanceChange').className = `balance-change ${changePercent >= 0 ? 'positive' : 'negative'}`;
+            
+            if (gameState.portfolioChart) {
+                gameState.portfolioChart.data.datasets[0].data = [gameState.cash, gameState.balance - gameState.cash];
+                gameState.portfolioChart.update('none');
+            }
+            updateStockList();
+        }
+
+        function filterStocks() {
+            const query = document.getElementById('stockSearch').value.toLowerCase();
+            document.querySelectorAll('.stock-item').forEach(item => {
+                const symbol = item.querySelector('.stock-symbol').textContent;
+                item.style.display = symbol.toLowerCase().includes(query) ? 'flex' : 'none';
+            });
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => notification.classList.remove('show'), 3000);
+        }
+
+        // Auto updates
+        setInterval(updateStockPrices, 3000);
+        setTimeout(() => {
+            gameState.stocks.push('AMD','INTC','BABA','SNAP');
+            updateStockList();
+        }, 2000);
+    </script>
+</body>
+</html>
